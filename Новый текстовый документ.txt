@@ -1,0 +1,156 @@
+#include <iostream>
+#include <string>
+#include <vector>
+
+class Quest {
+public:
+    std::string title;
+    std::string description;
+    bool isCompleted;
+    int requiredAmount; // Количество, необходимое для завершения квеста
+    int collectedAmount; // Количество, собранное игроком
+
+    Quest(std::string t, std::string d, int reqAmount = 0) 
+        : title(t), description(d), isCompleted(false), requiredAmount(reqAmount), collectedAmount(0) {}
+
+    void collect() {
+        if (!isCompleted && collectedAmount < requiredAmount) {
+            collectedAmount++;
+            std::cout << "Вы собрали бутылку Silex-Cola! Всего: " << collectedAmount << "/" << requiredAmount << std::endl;
+            if (collectedAmount >= requiredAmount) {
+                completeQuest();
+            }
+        }
+    }
+
+    void completeQuest() {
+        isCompleted = true;
+        std::cout << "Quest completed: " << title << std::endl;
+    }
+};
+
+class Player {
+public:
+    std::string name;
+    std::vector<Quest> quests;
+
+    Player(std::string n) : name(n) {}
+
+    void addQuest(Quest quest) {
+        quests.push_back(quest);
+    }
+
+    void showQuests() {
+        for (const auto& quest : quests) {
+            std::cout << "Quest: " << quest.title << " - " << (quest.isCompleted ? "Completed" : "Not Completed") << std::endl;
+        }
+    }
+};
+
+// Прототип функции для взаимодействия с терминалом работника
+void interactWithTerminal();
+
+// Функция для создания и отображения карты 5x5 с обозначением местоположения игрока и локации Silex
+void createMap(int playerX, int playerY) {
+    const int size = 5;
+    char map[size][size];
+
+    // Заполнение карты символами
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            map[i][j] = '.'; // '.' обозначает пустую клетку
+        }
+    }
+
+    // Установка местоположения игрока
+    map[playerY][playerX] = 'Y'; // 'Y' обозначает местоположение игрока
+
+    // Установка локации Silex
+    int silexX = 4; // Координаты Silex по оси X
+    int silexY = 0; // Координаты Silex по оси Y
+    map[silexY][silexX] = 'S'; // 'S' обозначает локацию Silex
+
+    // Отображение карты
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            std::cout << map[i][j] << ' ';
+        }
+        std::cout << std::endl;
+    }
+}
+
+// Функция для взаимодействия с локацией Silex
+void interactWithSilex(Player& player) {
+    std::cout << "Вы находитесь в Silex. Здесь продается газировка Silex-Cola!" << std::endl;
+    std::cout << "Кто-то говорит: 'Эта газировка - лучший способ утолить жажду!'" << std::endl;
+
+    // Добавление квеста, связанного с Silex-Cola
+    Quest silexColaQuest("Найти Silex-Cola", "Принести Silex-Cola для местного жителя.", 5);
+    player.addQuest(silexColaQuest);
+    std::cout << "Вы получили новый квест: " << silexColaQuest.title << std::endl;
+
+    // Взаимодействие с терминалом
+    char terminalCommand;
+    std::cout << "Хотите прочитать терминал работника? (y/n): ";
+    std::cin >> terminalCommand;
+
+    if (terminalCommand == 'y') {
+        interactWithTerminal();
+    }
+}
+
+// Функция для взаимодействия с терминалом работника
+void interactWithTerminal() {
+    std::cout << "Терминал работника: " << std::endl;
+    std::cout << "Внимание! Ядерные бомбы были сброшены на фабрику!" << std::endl;
+    std::cout << "Ситуация критическая. Работники должны эвакуироваться немедленно!" << std::endl;
+    std::cout << "Мы потеряли связь с центральным офисом. Пожалуйста, оставайтесь в укрытии!" << std::endl;
+    std::cout << "Не забывайте о Silex-Cola, она может спасти вам жизнь!" << std::endl;
+}
+
+int main() {
+    Player player("Ученый");
+    Quest quest1("Найти схему ", "Найти 20 летней давности схему постройки звездолета.");
+    player.addQuest(quest1);
+
+    player.showQuests();
+    player.quests[0].completeQuest(); // Завершение первого квеста
+    player.showQuests();
+
+    int playerX = 2; // Начальная позиция игрока по оси X
+    int playerY = 2; // Начальная позиция игрока по оси Y
+
+    char command;
+    while (true) {
+        createMap(playerX, playerY); // Вызов функции для создания и отображения карты
+        std::cout << "Введите команду (w/a/s/d для перемещения, q для выхода): ";
+        std::cin >> command;
+
+        // Обработка команд
+        if (command == 'w' && playerY > 0) {
+            playerY--; // Перемещение вверх
+        } else if (command == 's' && playerY < 4) {
+            playerY++; // Перемещение вниз
+        } else if (command == 'a' && playerX > 0) {
+            playerX--; // Перемещение влево
+        } else if (command == 'd' && playerX < 4) {
+            playerX++; // Перемещение вправо
+        } else if (command == 'q') {
+            break; // Выход из игры
+        } else {
+            std::cout << "Неверная команда или выход за пределы карты!" << std::endl;
+        }
+
+        // Проверка, находится ли игрок в Silex
+        if (playerX == 4 && playerY == 0) {
+            interactWithSilex(player); // Взаимодействие с локацией Silex
+        }
+
+        // Проверка, если игрок собрал Silex-Cola
+        if (playerX == 4 && playerY == 0) {
+            player.quests.back().collect(); // Собираем бутылку Silex-Cola
+        }
+    }
+
+    return 0;
+}
